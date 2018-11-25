@@ -27,9 +27,14 @@ import Servant
 import Network.Wai
 import Network.Wai.Handler.Warp
 
+import Network.HTTP.Types
+import Network.WebSockets.Connection (defaultConnectionOptions, sendTextData, acceptRequest)
+import Network.Wai.Handler.WebSockets (websocketsOr)
+import Network.WebSockets (ServerApp)
 
 type MyAPI = "users" :> Get '[JSON] [User]
     :<|> "static" :> Raw
+    :<|> "websocket" :> Raw
 
 data User = User
   { name :: String
@@ -54,9 +59,37 @@ myAPI = Proxy
 server :: Server MyAPI
 server = return users1
     :<|> serveDirectoryWebApp "static-files"
+    :<|> websocketfunc
+
+
 
 app1 :: Application
 app1 = serve myAPI server
+
+
+websocketfunc :: Tagged Handler Application
+websocketfunc = Tagged $ app2
+
+--websocketfunc = Tagged $ return (\respond  ->  respond helloworld')
+--      where helloworld' = responseLBS
+--                               status200
+--                               [("Content-Type", "text/plain")]
+--                               "Hello, Web!"
+
+
+app2 :: Application
+app2 = websocketsOr defaultConnectionOptions wsApp backupApp
+  where
+    wsApp :: ServerApp
+    wsApp pending_conn = do
+        conn <- acceptRequest pending_conn
+        sendTextData conn ("Hello, client!" :: Text)
+
+    backupApp :: Application
+    backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
+
+--type Application = Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+
 
 main :: IO ()
 main = run 8081 app1

@@ -30,6 +30,9 @@ dependencies:
 - time
 - wai
 - warp
+- http-types
+- wai-websockets
+- websockets
 
 library:
   source-dirs: src
