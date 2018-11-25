@@ -1,0 +1,8 @@
+<script>
+var socket = new WebSocket('ws://localhost:8081/websocket/');
+socket.onopen = function(event) {
+  console.log("ON OPEN, sending message");
+  socket.send('Some message'); // Sends data to server.
+};
+
+</script>
