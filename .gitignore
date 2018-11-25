@@ -1,0 +1,5 @@
+.stack-work/
+dashboard.cabal
+*~
+.idea/
+*.iml
