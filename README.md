@@ -12,3 +12,14 @@ sudo apt install haskell-stack
 ##### Use REPL `stack repl`
 
 
+
+
+
+### with Nixos and cable
+
+cabal2nix . > default.nix
+cabal2nix --shell . > shell.nix
+nix-shell --command 'cabal configure'
+cabal build
+
+nix-shell -- for ghc
