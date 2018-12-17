@@ -3,3 +3,4 @@ dashboard.cabal
 *~
 .idea/
 *.iml
+BasicAuthData.json
