@@ -1,2 +1,10 @@
+
+import Test.Hspec
+import qualified TimelineSpec
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec spec
+
+
+spec :: Spec
+spec = describe "Timeline"  TimelineSpec.spec
