@@ -7,7 +7,7 @@ build-type: Simple
 
 library
   hs-source-dirs:  src
-  exposed-modules: Lib, Client.Timeline, Client.Newman.Build, Client.Util
+  exposed-modules: Lib, Client.Timeline, Client.Newman.Board, Client.Util
   default-language: Haskell2010
   build-depends:   base < 5
                  , servant
@@ -30,7 +30,7 @@ library
                  , transformers
                  , http-client
                  , safe
-
+                 , wuss
 
 executable dashboard
     hs-source-dirs: app
@@ -58,7 +58,7 @@ executable dashboard
                  , http-client
                  , dashboard
                  , safe
-
+                 , wuss
 
 executable client
     hs-source-dirs: app/Client
@@ -88,7 +88,7 @@ executable client
                  , connection
                  , dashboard
                  , safe
-
+                 , wuss
 test-suite spec
   type: exitcode-stdio-1.0
   main-is: Spec.hs
@@ -119,4 +119,6 @@ test-suite spec
                  , connection
                  , dashboard
                  , safe
+                 , wuss
+
   default-language: Haskell2010

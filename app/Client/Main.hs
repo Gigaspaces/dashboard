@@ -7,16 +7,18 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Main where
-import Data.Text
-import Network.HTTP.Client (newManager, defaultManagerSettings, Manager)
-import Network.HTTP.Client.TLS (tlsManagerSettings, newTlsManager, mkManagerSettings, newTlsManagerWith)
+import Network.HTTP.Client        (newManager, defaultManagerSettings, Manager)
+import Network.HTTP.Client.TLS    (tlsManagerSettings, newTlsManager, mkManagerSettings, newTlsManagerWith)
 import Servant.Client
-import Network.Connection         (TLSSettings(..))
 import Servant.API.BasicAuth      (BasicAuthData (BasicAuthData))
 import Client.Timeline
-import Client.Newman.Build
-import Client.Util (getBasicAuthData)
-
+import Client.Newman.Board
+import Client.Util                (getBasicAuthData)
+import Control.Monad              (forever, unless, void)
+import Network.WebSockets         (ClientApp, ConnectionOptions, Headers, defaultConnectionOptions, runClientWithStream, receiveData, sendClose, sendTextData)
+import Network.WebSockets.Stream  (makeStream)
+import Network.Connection         (Connection, ConnectionParams (..), TLSSettings (..), connectTo, connectionGetChunk, connectionPut, initConnectionContext)
+import Data.ByteString.Lazy       (toStrict)
 -- :set -XOverloadedStrings
 
 
@@ -48,3 +50,10 @@ main = do
                     case res of
                       Left err -> putStrLn $ "Error: " ++ show err
                       Right dashboard -> print dashboard
+                    putStrLn ""
+                    -- https://xap-newman:8443/api/newman/job?buildId=5c28f6a2b385942a71d888b1&all=true
+                    -- res' <- runClientM (getJobs user (Just "5c28f6a2b385942a71d888b1") (Just "true")) (ClientEnv secureManager (BaseUrl Https "xap-newman.gspaces.com" 8443 "/api/newman"))
+                    res' <- runClientM (getBuildsAndJobs user) (ClientEnv secureManager (BaseUrl Https "xap-newman.gspaces.com" 8443 "/api/newman"))
+                    case res' of
+                      Left err -> putStrLn $ "Error: " ++ show err
+                      Right jobs -> print jobs
