@@ -13,12 +13,12 @@ import Servant.Client
 import Servant.API.BasicAuth      (BasicAuthData (BasicAuthData))
 import Client.Timeline
 import Client.Newman.Board
-import Client.Util                (getBasicAuthData)
+import Client.Util                (getBasicAuthData, toText)
 import Control.Monad              (forever, unless, void)
 import Network.WebSockets         (ClientApp, ConnectionOptions, Headers, defaultConnectionOptions, runClientWithStream, receiveData, sendClose, sendTextData)
 import Network.WebSockets.Stream  (makeStream)
 import Network.Connection         (Connection, ConnectionParams (..), TLSSettings (..), connectTo, connectionGetChunk, connectionPut, initConnectionContext)
-import Data.ByteString.Lazy       (toStrict)
+import qualified  Data.Text.IO as TIO
 -- :set -XOverloadedStrings
 
 
@@ -56,4 +56,4 @@ main = do
                     res' <- runClientM (getBuildsAndJobs user) (ClientEnv secureManager (BaseUrl Https "xap-newman.gspaces.com" 8443 "/api/newman"))
                     case res' of
                       Left err -> putStrLn $ "Error: " ++ show err
-                      Right jobs -> print jobs
+                      Right jobs -> TIO.putStrLn $ toText jobs

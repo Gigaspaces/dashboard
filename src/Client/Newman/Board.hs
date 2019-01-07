@@ -4,6 +4,13 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE DeriveAnyClass        #-}
+{-# LANGUAGE InstanceSigs          #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ExistentialQuantification #-}
+
+
+
 
 module Client.Newman.Board where
 import Data.Proxy
@@ -12,11 +19,14 @@ import Servant.API
 import Servant.Client
 import Data.Aeson
 import GHC.Generics
-import Client.Util
+import Client.Util               hiding (Event)
 import Control.Monad (forM)
 import Control.Monad.Reader
-
+import Data.Sort
+import Data.Maybe
 import Servant.API.BasicAuth      (BasicAuthData (BasicAuthData))
+import Debug.Trace
+
 
 data User = User
   { user :: Text
@@ -36,8 +46,7 @@ data BuildStatus = BuildStatus
  {
    failedTests :: Int,
    failed3TimesTests :: Int
- } deriving (Show, Generic)
-instance FromJSON BuildStatus
+ } deriving (Eq, Ord, Show, Generic, ToJSON, FromJSON)
 
 data Build = Build
  {
@@ -45,14 +54,13 @@ data Build = Build
    name :: Text,
    branch :: Text,
    buildStatus :: BuildStatus
- } deriving (Show, Generic)
-instance FromJSON Build
+ } deriving (Eq, Ord, Show, Generic, ToJSON, FromJSON)
+
 
 newtype Dashboard = Dashboard
  {
    activeBuilds :: [Build]
- } deriving (Show, Generic)
-instance FromJSON Dashboard
+ } deriving (Eq, Ord, Show, Generic, ToJSON, FromJSON)
 
 data Job = Job
  {
@@ -62,7 +70,7 @@ data Job = Job
    passedTests :: Int,
    jobFailedTests :: Int,
    runningTests :: Int
-   } deriving (Show, Generic)
+ } deriving (Eq, Ord, Show, Generic, ToJSON)
 
 instance FromJSON Job where
     parseJSON = withObject "BuildJob" $ \o -> do
@@ -80,7 +88,7 @@ data BuildAndJobs = BuildAndJobs
  {
     jobs :: [Job],
     build :: Maybe Build
- }  deriving (Show, Generic)
+ }  deriving (Eq, Show, Ord, Generic, ToJSON)
 
 instance FromJSON BuildAndJobs where
     parseJSON = withObject "BuildJobs" $ \o -> do
@@ -112,3 +120,55 @@ getBuildsAndJobs basicAuthData = do
  where
    insertBuild :: Build -> BuildAndJobs -> BuildAndJobs
    insertBuild b baj = baj{build = Just b}
+
+
+
+
+instance Diffable BuildAndJobs where
+    key = maybe "" Client.Newman.Board.id . build
+    deletedEvent = Ev "BuildAndJobs"
+    createdEvent = Ev "BuildAndJobs"
+    modifiedEvent = Ev "BuildAndJobs"
+    diffables a = Diff <$> jobs a
+
+
+instance Diffable Job where
+    key = jobName
+    deletedEvent = Ev "Job"
+    createdEvent = Ev "Job"
+    modifiedEvent = Ev "Job"
+    diffables a = []
+
+
+
+instance EventsGen BuildAndJobs where
+    gen = generate
+
+instance EventsGen Job where
+    gen = generate
+
+
+generate :: (Diffable a) => [a] -> [a] -> [Ev]
+generate [] [] = undefined
+generate [] l = createdEvent <$> l
+generate before [] = deletedEvent <$> before
+generate (a:rest1) (b:rest2) = if a == b
+                               then generate rest1 rest2
+                               else case compare (key a) (key b) of
+                                      EQ -> generate rest1 rest2
+                                      LT -> if sameKey a b
+                                            then modifiedEvent b : generate rest1 rest2
+                                            else deletedEvent a : generate rest1 (b:rest2)
+                                      GT -> if sameKey a b
+                                            then modifiedEvent b : generate rest1 rest2
+                                            else createdEvent b : generate (a:rest1) rest2
+           where
+             sameKey b1 b2 = key b1 == key b2
+
+{-
+class Foo a where
+    getAll :: a -> [Show]
+
+instance Foo BuildAndJobs where
+    getAll = jobs
+-}

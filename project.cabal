@@ -14,6 +14,7 @@ library
                  , text
                  , aeson
                  , aeson-compat
+                 , aeson-pretty
                  , attoparsec
                  , servant-server
                  , time
@@ -30,7 +31,9 @@ library
                  , transformers
                  , http-client
                  , safe
-                 , wuss
+                 , sort
+                 , unordered-containers
+
 
 executable dashboard
     hs-source-dirs: app
@@ -41,6 +44,7 @@ executable dashboard
                  , text
                  , aeson
                  , aeson-compat
+                 , aeson-pretty
                  , attoparsec
                  , servant-server
                  , time
@@ -58,7 +62,8 @@ executable dashboard
                  , http-client
                  , dashboard
                  , safe
-                 , wuss
+                 , sort
+                 , unordered-containers
 
 executable client
     hs-source-dirs: app/Client
@@ -69,6 +74,7 @@ executable client
                  , text
                  , aeson
                  , aeson-compat
+                 , aeson-pretty
                  , attoparsec
                  , servant-server
                  , time
@@ -88,7 +94,8 @@ executable client
                  , connection
                  , dashboard
                  , safe
-                 , wuss
+                 , sort
+                 , unordered-containers
 test-suite spec
   type: exitcode-stdio-1.0
   main-is: Spec.hs
@@ -100,6 +107,7 @@ test-suite spec
                  , text
                  , aeson
                  , aeson-compat
+                 , aeson-pretty
                  , attoparsec
                  , servant-server
                  , time
@@ -119,6 +127,7 @@ test-suite spec
                  , connection
                  , dashboard
                  , safe
-                 , wuss
+                 , sort
+                 , unordered-containers
 
   default-language: Haskell2010

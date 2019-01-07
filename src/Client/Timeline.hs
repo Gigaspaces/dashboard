@@ -79,14 +79,6 @@ http://192.168.10.2:6060/api/timeline
 
 -}
 
-data TimelineEvent = TimelineEvent EventType Timeline
-                   | TimelineDayEvent EventType Day
-                     deriving (Show, Generic, Eq)
-instance FromJSON TimelineEvent
-instance Event TimelineEvent where
-    eventName (TimelineEvent _ _) = "timeline"
-    eventName (TimelineDayEvent _ _) = "timeline day"
-    eventType (TimelineEvent t _) = t
 
 data Day = Day
   {
@@ -112,22 +104,6 @@ instance FromJSON Timeline where
   parseJSON = withObject "timeline" $ \o ->
     Timeline <$> o .: "Version" <*> o .: "name" <*> o .: "days"  <*> o .: "today"
 
-instance EventSource Timeline TimelineEvent where
-    events = genEvents
-
-genEvents :: Timeline -> Timeline -> [TimelineEvent]
-genEvents oldTimeline newTimeline = if timelineName oldTimeline  /= timelineName newTimeline
-                                    then
-                                        [TimelineEvent (Modified (timelineName oldTimeline)) newTimeline]
-                                    else
-                                        genDayEvents (days oldTimeline)  (days newTimeline)
-genDayEvents :: [Day] -> [Day] -> [TimelineEvent]
-genDayEvents [] [] = []
-genDayEvents [] added = TimelineDayEvent Created <$> added
-genDayEvents removed [] = TimelineDayEvent Deleted <$> removed
-genDayEvents (o:oldDays) (n:newDays) = if o == n
-                                        then genDayEvents oldDays newDays
-                                        else  TimelineDayEvent (Modified (name o)) n : genDayEvents oldDays newDays
 
 
 type TimelineApi = "timeline" :> Get '[JSON] Timeline
